@@ -10,7 +10,7 @@ endfunction
 " triple [major, minor, patch]
 "
 " If the version cannot be found, an empty List will be returned instead.
-function! ale#semver#GetVersion(executable, version_lines) abort
+function! s:GetVersion(executable, version_lines) abort
     let l:version = get(s:version_cache, a:executable, [])
 
     for l:line in a:version_lines
@@ -27,9 +27,25 @@ function! ale#semver#GetVersion(executable, version_lines) abort
     return l:version
 endfunction
 
-" Return 1 if the semver version has been cached for a given executable.
-function! ale#semver#HasVersion(executable) abort
-    return has_key(s:version_cache, a:executable)
+function! ale#semver#RunWithVersionCheck(buffer, executable, args, Callback) abort
+    if empty(a:executable)
+        return ''
+    endif
+
+    let l:cache = s:version_cache
+
+    if has_key(s:version_cache, a:executable)
+        return a:Callback(a:buffer, s:version_cache[a:executable])
+    endif
+
+    let l:command = ale#Escape(a:executable) . ' ' . a:args
+
+    return ale#command#Run(
+    \   a:buffer,
+    \   l:command,
+    \   {_, output -> a:Callback(a:buffer, s:GetVersion(a:executable, output))},
+    \   {'output_stream': 'both'}
+    \)
 endfunction
 
 " Given two triples of integers [major, minor, patch], compare the triples
