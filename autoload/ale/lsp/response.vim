@@ -27,7 +27,11 @@ function! ale#lsp#response#ReadDiagnostics(response) abort
 
     for l:diagnostic in a:response.params.diagnostics
         let l:severity = get(l:diagnostic, 'severity', 0)
+        " we want to preserve the line breaks for `detail` but replace with
+        " spaces for messages
+        let l:diagnostic.detail = l:diagnostic.message
         let l:diagnostic.message = substitute(l:diagnostic.message, "\n", ' ', 'g')
+
         let l:loclist_item = {
         \   'text': l:diagnostic.message,
         \   'type': 'E',
@@ -64,14 +68,14 @@ function! ale#lsp#response#ReadDiagnostics(response) abort
             \   ':' . (val.location.range.start.character + 1) .
             \   ":\n\t" . val.message
             \})
-            let l:loclist_item.detail = l:diagnostic.message . "\n" . join(l:related, "\n")
+            let l:loclist_item.detail = l:diagnostic.detail . "\n" . join(l:related, "\n")
         endif
 
         if has_key(l:diagnostic, 'source')
             let l:loclist_item.detail = printf(
             \   '[%s] %s',
             \   l:diagnostic.source,
-            \   l:diagnostic.message
+            \   l:diagnostic.detail
             \)
         endif
 
