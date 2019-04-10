@@ -70,7 +70,7 @@ function! ale#lsp#response#ReadDiagnostics(response) abort
             let l:loclist_item.detail = printf(
             \   '[%s] %s',
             \   l:diagnostic.source,
-            \   l:diagnostic.message
+            \   substitute(l:diagnostic.message, "\n", ' ', 'g'),
             \)
         endif
 
